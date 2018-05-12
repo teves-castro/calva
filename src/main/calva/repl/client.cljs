@@ -3,11 +3,14 @@
    ["/calva/state.js" :as state]
    [calva.repl.nrepl :as nrepl]))
 
-(defn send [msg callback]
+(defn- send [msg callback]
+  "Sends a message to the nRepl connected to `this`"
   (this-as this
            (nrepl/message this msg callback)))
 
-(defn create [options]
+(defn create
+  "Creates a nRepl connection with a bound `send`"
+  [options]
   (let [current (state/deref)
         options (js->clj options :keywordize-keys true)
         options (if (.get current "connected")

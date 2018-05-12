@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import * as state from '../state';
-import repl from '../repl/client';
+import repl from 'goog:calva.repl.client';
 import * as util from '../utilities';
 
 class DocumentFormattingEditProvider {

@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import * as state from '../state';
-import repl from '../repl/client';
+import repl from 'goog:calva.repl.client';
 import message from 'goog:calva.repl.message';
 import * as util from '../utilities';
 
@@ -27,34 +27,33 @@ export default class CompletionItemProvider {
             filetype = document.fileName.substr(filetypeIndex, document.fileName.length);
         if (this.state.deref().get("connected")) {
             return new Promise((resolve, reject) => {
-                let current = this.state.deref(),
-                    client = repl.create()
-                        .once('connect', () => {
-                            let msg = message.completeMsg(util.getSession(filetype),
-                                util.getNamespace(document.getText()), text),
-                                completions = [];
-                            client.send(msg, function (results) {
-                                for (var r = 0; r < results.length; r++) {
-                                    let result = results[r];
-                                    if (result.hasOwnProperty('completions')) {
-                                        for (let c = 0; c < result.completions.length; c++) {
-                                            let item = result.completions[c];
-                                            completions.push({
-                                                label: item.candidate,
-                                                kind: scope.mappings[item.type] || vscode.CompletionItemKind.Text,
-                                                insertText: item[0] === '.' ? item.slice(1) : item
-                                            });
-                                        }
+                let client = repl.create()
+                    .once('connect', () => {
+                        let msg = message.completeMsg(util.getSession(filetype),
+                            util.getNamespace(document.getText()), text),
+                            completions = [];
+                        client.send(msg, function (results) {
+                            for (var r = 0; r < results.length; r++) {
+                                let result = results[r];
+                                if (result.hasOwnProperty('completions')) {
+                                    for (let c = 0; c < result.completions.length; c++) {
+                                        let item = result.completions[c];
+                                        completions.push({
+                                            label: item.candidate,
+                                            kind: scope.mappings[item.type] || vscode.CompletionItemKind.Text,
+                                            insertText: item[0] === '.' ? item.slice(1) : item
+                                        });
                                     }
                                 }
-                                if (completions.length > 0) {
-                                    resolve(new vscode.CompletionList(completions, false));
-                                } else {
-                                    reject("No completions found");
-                                }
-                                client.end();
-                            });
+                            }
+                            if (completions.length > 0) {
+                                resolve(new vscode.CompletionList(completions, false));
+                            } else {
+                                reject("No completions found");
+                            }
+                            client.end();
                         });
+                    });
             });
         } else {
             return new vscode.Hover("Connect to repl for auto-complete..");

@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import _ from 'lodash';
 import * as state from '../../state';
-import repl from '../client';
+import repl from 'goog:calva.repl.client';
 import message from 'goog:calva.repl.message';
 import evaluate from './evaluate';
 import * as util from '../../utilities';

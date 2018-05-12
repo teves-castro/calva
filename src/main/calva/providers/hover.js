@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import * as state from '../state';
-import repl from '../repl/client';
+import repl from 'goog:calva.repl.client';
 import message from 'goog:calva.repl.message';
 import * as util from '../utilities';
 

@@ -1,5 +1,5 @@
 import * as state from '../../state';
-import repl from '../client';
+import repl from 'goog:calva.repl.client';
 import message from 'goog:calva.repl.message';
 import * as util from '../../utilities';
 
