@@ -1,10 +1,39 @@
 (ns calva.extension
-  (:require ["./extension" :as js-ext]))
+  (:require 
+    ["vscode" :as vscode]
+    ["/calva/language" :default ClojureLanguageConfiguration]))
 
-(js/console.log "CALVA LOADED!")
 
-;; this file is only required because the :node-library :exports config needs a CLJS namespace
+(defn cmd-connect []
+  (js/console.log "Connect"))
+
+
+(defn cmd-disconnect []
+  (js/console.log "Disconnect"))
+
+
+(defn cmd-state []
+  (js/console.log "State"))
+
+
+(def cmds
+  {"calva.v2.connect" cmd-connect
+   "calva.v2.disconnect" cmd-disconnect
+   "calva.v2.state" cmd-state})
+
+
+(defn activate [^js context]
+  (js/console.log "Calva is active.")
+  
+  (-> (.-languages vscode)
+      (.setLanguageConfiguration "clojure" (ClojureLanguageConfiguration.)))
+  
+  (doseq [[k f] cmds]
+    (-> (.-subscriptions context)
+        (.push (-> vscode
+                   (.-commands)
+                   (.registerCommand k f))))))
+
 
 (defn exports []
-  #js {:activate js-ext/activate
-       :deactivate js-ext/deactivate})
+  #js {:activate activate})

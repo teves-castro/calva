@@ -209,6 +209,22 @@
                 "command": "calva.recreateCljsRepl",
                 "title": "Attach (or re-attach) a Clojurescript session",
                 "category": "Calva"
+            },
+
+            {
+                "title": "Connect (v2)",
+                "category": "Calva",
+                "command": "calva.v2.connect"
+            },
+            {
+                "title": "Disconnect (v2)",
+                "category": "Calva",
+                "command": "calva.v2.disconnect"
+            },
+            {
+                "title": "State (v2)",
+                "category": "Calva",
+                "command": "calva.v2.state"
             }
         ],
         "keybindings": [
