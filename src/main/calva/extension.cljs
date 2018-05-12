@@ -1,25 +1,16 @@
 (ns calva.extension
   (:require 
     ["vscode" :as vscode]
-    ["/calva/language" :default ClojureLanguageConfiguration]))
+    ["/calva/language" :default ClojureLanguageConfiguration]
+            
+    [calva.v2.cmd :as cmd]))
 
 
-(defn cmd-connect []
-  (js/console.log "Connect"))
-
-
-(defn cmd-disconnect []
-  (js/console.log "Disconnect"))
-
-
-(defn cmd-state []
-  (js/console.log "State"))
-
-
-(def cmds
-  {"calva.v2.connect" cmd-connect
-   "calva.v2.disconnect" cmd-disconnect
-   "calva.v2.state" cmd-state})
+(defn- register-command [context cmd]
+  (-> (.-subscriptions context)
+      (.push (-> vscode
+                 (.-commands)
+                 (.registerCommand (-> cmd meta :cmd) cmd)))))
 
 
 (defn activate [^js context]
@@ -28,11 +19,9 @@
   (-> (.-languages vscode)
       (.setLanguageConfiguration "clojure" (ClojureLanguageConfiguration.)))
   
-  (doseq [[k f] cmds]
-    (-> (.-subscriptions context)
-        (.push (-> vscode
-                   (.-commands)
-                   (.registerCommand k f))))))
+  (register-command context #'cmd/connect)
+  (register-command context #'cmd/disconnect)
+  (register-command context #'cmd/state))
 
 
 (defn exports []
