@@ -3,6 +3,8 @@
     ["vscode" :as vscode]
     ["/calva/language" :default ClojureLanguageConfiguration]
             
+    [calva.v2.db :refer [*db]]
+    [calva.v2.output :as output]
     [calva.v2.cmd :as cmd]))
 
 
@@ -14,14 +16,17 @@
 
 
 (defn activate [^js context]
-  (js/console.log "Calva is active.")
-  
   (-> (.-languages vscode)
       (.setLanguageConfiguration "clojure" (ClojureLanguageConfiguration.)))
   
+  (swap! *db assoc :output (-> (.-window vscode)
+                               (.createOutputChannel "Calva")))
+  
   (register-command context #'cmd/connect)
   (register-command context #'cmd/disconnect)
-  (register-command context #'cmd/state))
+  (register-command context #'cmd/state)
+  
+  (output/append-line "Calva is active."))
 
 
 (defn exports []
