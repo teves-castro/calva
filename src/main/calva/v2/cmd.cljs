@@ -4,14 +4,16 @@
 
 (defn ^{:cmd "calva.v2.connect"} connect []
   (let [^js socket (nrepl/connect {:host "localhost"
-                                   :port "64772"
-                                   :on-connect #(swap! *db (fn [db]
-                                                             (assoc-in db [:conn :connected?] true)))
+                                   :port "57736"
+                                   :on-connect #(do
+                                                  (swap! *db (fn [db]
+                                                               (assoc-in db [:conn :connected?] true)))
+                                                  (js/console.log "nrepl connected"))
                                    :on-end #(swap! *db (fn [db]
-                                                         (let [^js socket (get-in db [:conn :socket])]
-                                                           (-> db
-                                                               (update-in [:conn] dissoc :socket)
-                                                               (assoc-in [:conn :connected?] false)))))})]
+                                                         ;; (let [^js socket (get-in db [:conn :socket])]) ;; socket doesn't seem to be used?
+                                                         (-> db
+                                                             (update-in [:conn] dissoc :socket)
+                                                             (assoc-in [:conn :connected?] false))))})]
     (swap! *db (fn [db]
                  (assoc-in db [:conn :socket] socket)))))
 
