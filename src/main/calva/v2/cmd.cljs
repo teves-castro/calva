@@ -5,19 +5,15 @@
 (defn ^{:cmd "calva.v2.connect"} connect []
   (let [^js socket (nrepl/connect #js {:host "localhost"
                                        :port "64772"
-                                       :on-connect #(swap! *db
-                                                           (fn [m1 m2]
-                                                             (merge-with merge m1 m2))
-                                                           {:conn {:connected? true}})
-                                       :on-end #(swap! *db (fn [m]
-                                                             (let [^js socket (get-in m [:conn :socket])]
-                                                               (-> m
+                                       :on-connect #(swap! *db (fn [db]
+                                                                 (assoc-in db [:conn :connected?] true)))
+                                       :on-end #(swap! *db (fn [db]
+                                                             (let [^js socket (get-in db [:conn :socket])]
+                                                               (-> db
                                                                    (update-in [:conn] dissoc :socket)
                                                                    (assoc-in [:conn :connected?] false)))))})]
-    (swap! *db
-           (fn [m1 m2]
-             (merge-with merge m1 m2))
-           {:conn {:socket socket}})))
+    (swap! *db (fn [db]
+                 (assoc-in db [:conn :socket] socket)))))
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect []
   (let [^js socket (get-in @*db [:conn :socket])]
