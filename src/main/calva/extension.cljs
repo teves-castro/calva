@@ -3,7 +3,7 @@
     ["vscode" :as vscode]
     ["/calva/language" :default ClojureLanguageConfiguration]
             
-    [calva.v2.db :refer [*db]]
+    [calva.v2.db :as db]
     [calva.v2.output :as output]
     [calva.v2.cmd :as cmd]))
 
@@ -19,8 +19,9 @@
   (-> (.-languages vscode)
       (.setLanguageConfiguration "clojure" (ClojureLanguageConfiguration.)))
   
-  (swap! *db assoc :output (-> (.-window vscode)
-                               (.createOutputChannel "Calva")))
+  (db/mutate! (fn [db]
+                (assoc db :output (-> (.-window vscode)
+                                      (.createOutputChannel "Calva")))))
   
   (register-command context #'cmd/connect)
   (register-command context #'cmd/disconnect)
