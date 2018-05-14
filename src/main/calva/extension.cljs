@@ -26,7 +26,7 @@
     (register-command #'cmd/disconnect)
     (register-command #'cmd/state))
 
-  (output/append-line "Calva is active."))
+  (output/append-line (:output @db/*db) "Calva is active."))
 
 (defn exports []
   #js {:activate activate})
