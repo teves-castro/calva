@@ -5,11 +5,11 @@
   map?)
 
 
-(defonce ^:private *db 
+(defonce *db 
   (atom {}))
 
 
-(defn mutate! [f]
+(defn mutate! [*db f]
   (swap! *db (fn [db]
                (let [new-db (f db)]
                  (when-not (s/valid? :calva/db new-db)
