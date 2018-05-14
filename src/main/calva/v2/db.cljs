@@ -4,15 +4,16 @@
 (s/def :calva/db
   map?)
 
-
-(defonce *db 
+(defonce *db
   (atom {}))
 
+(defn mutate!
+  ([f]
+   (mutate! *db f))
+  ([*db f]
+   (swap! *db (fn [db]
+                (let [new-db (f db)]
+                  (when-not (s/valid? :calva/db new-db)
+                    (js/console.error (s/explain-str :calva/db new-db)))
 
-(defn mutate! [*db f]
-  (swap! *db (fn [db]
-               (let [new-db (f db)]
-                 (when-not (s/valid? :calva/db new-db)
-                   (js/console.error (s/explain-str :calva/db new-db)))
-                 
-                 new-db))))
+                  new-db)))))
