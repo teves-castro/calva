@@ -21,7 +21,6 @@
   (register-command context #'cmd/connect)
   (register-command context #'cmd/disconnect)
   (register-command context #'cmd/state)
-  (register-command context #'cmd/connect-then-disconnect)
 
   ;; Initialize db
   (db/mutate! (fn [db]
