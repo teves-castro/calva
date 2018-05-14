@@ -39,3 +39,7 @@
 
   db)
 
+(defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [db]
+  (-> db
+      (connect)
+      (disconnect)))
