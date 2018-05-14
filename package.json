@@ -235,6 +235,11 @@
                 "title": "State (v2)",
                 "category": "Calva",
                 "command": "calva.v2.state"
+            },
+            {
+                "title": "Connect & Disconnect (v2)",
+                "category": "Calva",
+                "command": "calva.v2.connectThenDisconnect"
             }
         ],
         "keybindings": [
