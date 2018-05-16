@@ -12,7 +12,7 @@
 
 (defn ^{:cmd "calva.v2.connect"} connect [{:keys [output] :as db}]
   (let [host "localhost"
-        port 52165
+        port 57736
         ^js socket (nrepl/connect {:host host
                                    :port port
                                    :on-connect (fn []
