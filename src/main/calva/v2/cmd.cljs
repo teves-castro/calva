@@ -4,7 +4,7 @@
 
    [kitchen-async.promise :as p]
 
-   [calva.v2.db :as db]
+   [calva.v2.state :as state]
    [calva.v2.nrepl :as nrepl]
    [calva.v2.output :as output]
    [calva.v2.gui :as gui]))
@@ -63,3 +63,7 @@
 
   db)
 
+(defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [db]
+  (-> db
+      (connect)
+      (disconnect)))

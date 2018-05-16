@@ -5,7 +5,7 @@
    [kitchen-async.promise :as p]
 
    [calva.v2.language :as language]
-   [calva.v2.db :as db]
+   [calva.v2.state :as state]
    [calva.v2.output :as output]
    [calva.v2.cmd :as cmd]))
 
