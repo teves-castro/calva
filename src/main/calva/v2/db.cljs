@@ -1,5 +1,6 @@
 (ns calva.v2.db
-  (:require [cljs.spec.alpha :as s]))
+  (:require
+   [cljs.spec.alpha :as s]))
 
 (s/def :calva/db
   map?)
@@ -7,7 +8,7 @@
 (defonce *db
   (atom {}))
 
-(defn mutate!
+(defn- mutate!
   ([f]
    (mutate! *db f))
   ([*db f]
