@@ -6,7 +6,8 @@
 
    [calva.v2.db :as db]
    [calva.repl.nrepl :as nrepl]
-   [calva.v2.output :as output]))
+   [calva.v2.output :as output]
+   [calva.v2.gui :as gui]))
 
 (defn- state-str [db]
   (if (get-in db [:conn :connected?])
@@ -29,11 +30,11 @@
                                                        :on-connect (fn []
                                                                      (let [new-db (db/mutate! #(assoc-in % [:conn :connected?] true))]
                                                                        (output/append-line output (state-str new-db))
-                                                                       (.showInformationMessage (.-window vscode) "Connected to nREPL Server.")))
+                                                                       (gui/show-information-message "Connected to nREPL Server.")))
                                                        :on-end (fn []
                                                                  (let [new-db (db/mutate! #(dissoc % :conn))]
                                                                    (output/append-line output (state-str new-db))
-                                                                   (.showInformationMessage (.-window vscode) "Disconnected from nREPL Server.")))})]
+                                                                   (gui/show-information-message  "Disconnected from nREPL Server.")))})]
 
                         (-> db
                             (assoc-in [:conn :host] host)
