@@ -5,7 +5,7 @@
    [kitchen-async.promise :as p]
 
    [calva.v2.db :as db]
-   [calva.repl.nrepl :as nrepl]
+   [calva.v2.nrepl :as nrepl]
    [calva.v2.output :as output]
    [calva.v2.gui :as gui]))
 
