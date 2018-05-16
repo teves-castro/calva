@@ -2,8 +2,6 @@
   (:require
    ["vscode" :as vscode]
 
-   [kitchen-async.promise :as p]
-
    [calva.v2.language :as language]
    [calva.v2.db :as db]
    [calva.v2.output :as output]
