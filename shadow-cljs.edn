@@ -6,7 +6,8 @@
  :dependencies
  [[org.clojure/core.async "0.4.474"]
   [cider/cider-nrepl "0.16.0"]
-  [org.clojure/tools.nrepl "0.2.12"]]
+  [org.clojure/tools.nrepl "0.2.12"]
+  [kitchen-async "0.1.0-SNAPSHOT"]]
 
  :builds
  {:calva

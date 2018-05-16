@@ -7,6 +7,9 @@
 (defonce *db
   (atom {}))
 
+(defn db []
+  @*db)
+
 (defn mutate!
   ([f]
    (mutate! *db f))

@@ -2,6 +2,8 @@
   (:require
    ["vscode" :as vscode]
 
+   [kitchen-async.promise :as p]
+
    [calva.v2.language :as language]
    [calva.v2.db :as db]
    [calva.v2.output :as output]
@@ -11,8 +13,11 @@
   (-> (.-subscriptions context)
       (.push (-> vscode
                  (.-commands)
-                 (.registerCommand (-> cmd meta :cmd) #(db/mutate! (fn [db]
-                                                                     (cmd db))))))))
+                 (.registerCommand (-> cmd meta :cmd) #(let [current-db (db/db)]
+                                                         (p/then (p/->promise (cmd current-db))
+                                                                 (fn [new-db]
+                                                                   (db/mutate! (fn [_]
+                                                                                 new-db))))))))))
 
 (defn activate [^js context]
   (-> (.-languages vscode)

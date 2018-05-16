@@ -1,5 +1,8 @@
 (ns calva.v2.cmd
   (:require
+   ["vscode" :as vscode]
+
+   [kitchen-async.promise :as p]
 
    [calva.v2.db :as db]
    [calva.repl.nrepl :as nrepl]
@@ -11,21 +14,37 @@
     "Disconnected."))
 
 (defn ^{:cmd "calva.v2.connect"} connect [{:keys [output] :as db}]
-  (let [host "localhost"
-        port 52165
-        ^js socket (nrepl/connect {:host host
-                                   :port port
-                                   :on-connect (fn []
-                                                 (let [new-db (db/mutate! #(assoc-in % [:conn :connected?] true))]
-                                                   (output/append-line-and-show output (state-str new-db))))
-                                   :on-end (fn []
-                                             (let [new-db (db/mutate! #(dissoc % :conn))]
-                                               (output/append-line-and-show output (state-str new-db))))})]
+  (p/let [host (.showInputBox (.-window vscode) #js {:placeHolder "nREPL Server Address"
+                                                     :ignoreFocusOut true
+                                                     :value "localhost"})
 
-    (-> db
-        (assoc-in [:conn :host] host)
-        (assoc-in [:conn :port] port)
-        (assoc-in [:conn :socket] socket))))
+          port (.showInputBox (.-window vscode)  #js {:placeHolder "nREPL Server Port"
+                                                      :ignoreFocusOut true})
+
+          connect (fn [[host port]]
+                    ;; TODO
+                    (if (and host port)
+                      (let [^js socket (nrepl/connect {:host host
+                                                       :port port
+                                                       :on-connect (fn []
+                                                                     (let [new-db (db/mutate! #(assoc-in % [:conn :connected?] true))]
+                                                                       (output/append-line output (state-str new-db))
+                                                                       (.showInformationMessage (.-window vscode) "Connected to nREPL Server.")))
+                                                       :on-end (fn []
+                                                                 (let [new-db (db/mutate! #(dissoc % :conn))]
+                                                                   (output/append-line output (state-str new-db))
+                                                                   (.showInformationMessage (.-window vscode) "Disconnected from nREPL Server.")))})]
+
+                        (-> db
+                            (assoc-in [:conn :host] host)
+                            (assoc-in [:conn :port] port)
+                            (assoc-in [:conn :socket] socket)))
+
+                      ;; don't change `db`
+                      db))]
+
+    (p/-> (p/all [host port])
+          (connect))))
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect [db]
   (when-let [^js socket (get-in db [:conn :socket])]
