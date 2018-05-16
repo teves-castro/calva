@@ -13,11 +13,7 @@
   (-> (.-subscriptions context)
       (.push (-> vscode
                  (.-commands)
-                 (.registerCommand (-> cmd meta :cmd) #(let [current-db (db/db)]
-                                                         (p/then (p/->promise (cmd current-db))
-                                                                 (fn [new-db]
-                                                                   (db/mutate! (fn [_]
-                                                                                 new-db))))))))))
+                 (.registerCommand (-> cmd meta :cmd) #(db/transact! cmd))))))
 
 (defn activate [^js context]
   (-> (.-languages vscode)

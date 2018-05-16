@@ -1,5 +1,7 @@
 (ns calva.v2.db
-  (:require [cljs.spec.alpha :as s]))
+  (:require 
+   [cljs.spec.alpha :as s]
+   [kitchen-async.promise :as p]))
 
 (s/def :calva/db
   map?)
@@ -7,10 +9,8 @@
 (defonce *db
   (atom {}))
 
-(defn db []
-  @*db)
 
-(defn mutate!
+(defn- mutate!
   ([f]
    (mutate! *db f))
   ([*db f]
@@ -20,3 +20,10 @@
                     (js/console.error (s/explain-str :calva/db new-db)))
 
                   new-db)))))
+
+
+(defn transact! [f]
+  (p/then (p/->promise (f @*db))
+          (fn [new-db]
+            (mutate! (fn [_]
+                       new-db)))))
