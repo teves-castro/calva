@@ -13,7 +13,7 @@
   (-> (.-subscriptions context)
       (.push (-> vscode
                  (.-commands)
-                 (.registerCommand (-> cmd meta :cmd) #(db/transact! cmd))))))
+                 (.registerCommand (-> cmd meta :cmd) cmd)))))
 
 (defn activate [^js context]
   (-> (.-languages vscode)
@@ -24,15 +24,15 @@
   (register-command context #'cmd/state)
 
   ;; Initialize db
-  (db/transact! (fn [db]
-                  (let [^js output (-> (.-window vscode)
-                                       (.createOutputChannel "Calva"))
+  (db/mutate! (fn [db]
+                (let [^js output (-> (.-window vscode)
+                                     (.createOutputChannel "Calva"))
 
-                        new-db (assoc db :output output)]
+                      new-db (assoc db :output output)]
 
-                    (output/append-line output "Calva is active.")
+                  (output/append-line output "Calva is active.")
 
-                    new-db))))
+                  new-db))))
 
 (defn exports []
   #js {:activate activate})
