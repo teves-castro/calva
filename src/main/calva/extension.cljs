@@ -1,11 +1,10 @@
 (ns calva.extension
   (:require
    ["vscode" :as vscode]
+   [citrus.core :as citrus]
    [calva.v2.language :as language]
    [calva.v2.connection :as connection]
-   [citrus.core :as citrus]
-   [calva.v2.state :as state]
-   [calva.v2.output :as output]))
+   [calva.v2.state :as state]))
 
 (defn- register-command [r context cmd]
   (-> (.-subscriptions context)
@@ -20,7 +19,7 @@
         (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
 
     (register-command reconciler context #'connection/connect-cmd)
-    (register-command reconciler context #'connection/disconnect)
+    (register-command reconciler context #'connection/disconnect-cmd)
     (register-command reconciler context #'connection/connect-then-disconnect)
     (register-command reconciler context #'connection/state)))
 
