@@ -15,8 +15,7 @@
 
 (defn activate [^js context]
   (let [reconciler state/reconciler]
-    (citrus/dispatch-sync! reconciler :output :create-output-channel "Calva says")
-    (output/append-line reconciler "Calva activated  ❤️")
+    (citrus/dispatch! reconciler :output :create-output-channel "Calva says"  "Calva activated  ❤️")
     (-> (.-languages vscode)
         (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
 

@@ -6,12 +6,6 @@
    [calva.v2.output :as output]
    [calva.v2.gui :as gui]))
 
-(defn- state-str [r]
-  (let [connection @(citrus/subscription r [:connection])]
-    (if (:connected? connection)
-      (str "Connected to " (:host connection) ":" (:port connection) ".")
-      "Disconnected.")))
-
 (def initial-state
   {:connected? false})
 
@@ -20,15 +14,16 @@
 (defmethod control :init []
   {:state initial-state})
 
-(defmethod control :on-connect [r [socket] state]
-  (js/console.log "on-connect: " (pr-str state))
-  #_(output/append-line r (pr-str state))
-  {:state (assoc state :connected? true)})
+(defmethod control :on-connect [r _ state]
+  (js/console.log "on-connect")
+  {:state (assoc state :connected? true)
+   :output-line {:line (pr-str state)}})
 
 (defmethod control :on-end [r _ state]
-  (js/console.log "on-end: ")
+  (js/console.log "on-end")
   #_(output/append-line r (pr-str state))
-  {:state {:connected? false}})
+  {:state {:connected? false}
+   :output-line {:line (pr-str state)}})
 
 (defmethod control :connect [r [host port] state]
   (js/console.log "connect: " host port)
@@ -41,9 +36,11 @@
     :port port
     :on-connect :on-connect
     :on-end :on-end
-    :got-socket :got-socket}})
+    :got-socket :got-socket}
+   :output-line
+   {:line (pr-str state)}})
 
-(defmethod control :got-socket [r [socket] state]
+(defmethod control :got-socket [r [^js socket] state]
   (js/console.log "got socket: " socket)
   {:state
    (assoc state
@@ -70,11 +67,12 @@
       (apply citrus/dispatch! r :connection :connect))))
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect [r]
-  (when-let [^js socket (citrus/subscription r [:connection :socket])]
+  (when-let [^js socket @(citrus/subscription r [:connection :socket])]
     (.end socket)))
 
 (defn ^{:cmd "calva.v2.state"} state [r]
-  (output/append-line-and-show r (pr-str @(citrus/subscription r [:connection]))))
+  (citrus/dispatch! r :output :output-line {:line (pr-str state)
+                                            :show true}))
 
 (defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [r]
   (-> r

@@ -11,6 +11,7 @@
     {:output output/control
      :connection connection/control}
     :effect-handlers
-    {:nrepl-connect connection/nrepl-connect}}))
+    {:output-line output/output-line
+     :nrepl-connect connection/nrepl-connect}}))
 
 (defonce init-controllers (citrus/broadcast-sync! reconciler :init))
