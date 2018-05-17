@@ -20,7 +20,7 @@
     (-> (.-languages vscode)
         (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
 
-    (register-command reconciler context #'connection/connect)
+    (register-command reconciler context #'connection/connect-cmd)
     (register-command reconciler context #'connection/disconnect)
     (register-command reconciler context #'connection/state)))
 

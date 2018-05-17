@@ -9,6 +9,8 @@
     (atom {})
     :controllers
     {:output output/control
-     :connection connection/control}}))
+     :connection connection/control}
+    :effect-handlers
+    {:nrepl-connect connection/nrepl-connect}}))
 
 (defonce init-controllers (citrus/broadcast-sync! reconciler :init))

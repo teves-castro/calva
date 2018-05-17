@@ -20,53 +20,63 @@
 (defmethod control :init []
   {:state initial-state})
 
-(defn control :connect [r [host port] state]
-  (if (and host port)
-    (let [^js socket (nrepl/connect {:host host
-                                     :port port
-                                     :on-connect #(citrus/dispatch! r :connection :on-connect)
-                                     :on-end #(citrus/dispatch! r :connection :on-end)})]
-
-      {:state (assoc state
-                     :host host
-                     :port port
-                     :socket socket)
-       :on-})
-    {:state state}))
-
-(defmethod control :on-connect [r _ state]
-  (output/append-line r (state-str r))
-  (assoc state :connected? true))
+(defmethod control :on-connect [r [socket] state]
+  (js/console.log "on-connect: " (pr-str state))
+  #_(output/append-line r (pr-str state))
+  {:state (assoc state :connected? true)})
 
 (defmethod control :on-end [r _ state]
-  (output/append-line r (state-str r))
-  (assoc state :connected? false))
+  (js/console.log "on-end: ")
+  #_(output/append-line r (pr-str state))
+  {:state {:connected? false}})
 
-(defn ^{:cmd "calva.v2.connect"} connect [r]
+(defmethod control :connect [r [host port] state]
+  (js/console.log "connect: " host port)
+  {:state
+   (assoc state
+          :host host
+          :port port)
+   :nrepl-connect
+   {:host host
+    :port port
+    :on-connect :on-connect
+    :on-end :on-end
+    :got-socket :got-socket}})
+
+(defmethod control :got-socket [r [socket] state]
+  (js/console.log "got socket: " socket)
+  {:state
+   (assoc state
+          :socket socket)})
+
+(defn nrepl-connect [r cn {:keys [host port on-connect on-end got-socket] :as effect}]
+  (js/console.log "nrepl-connect: " host port)
+  (when (and host port)
+    (let [^js socket (nrepl/connect {:host host
+                                     :port port
+                                     :on-connect #(citrus/dispatch! r cn on-connect)
+                                     :on-end #(citrus/dispatch! r cn on-end)})]
+      (citrus/dispatch! r cn got-socket socket))))
+
+(defn ^{:cmd "calva.v2.connect"} connect-cmd [r]
   (p/let [host (gui/show-input-box {:placeHolder "nREPL Server Address"
                                     :ignoreFocusOut true
                                     :value "localhost"})
 
           port (gui/show-input-box {:placeHolder "nREPL Server Port"
-                                    :ignoreFocusOut true})
+                                    :ignoreFocusOut true})]
+    (p/->> (p/all [host port])
+      (concat)
+      (apply citrus/dispatch! r :connection :connect))))
 
-          connect #(citrus/dispatch! r :connection :connect host port)]
+(defn ^{:cmd "calva.v2.disconnect"} disconnect [r]
+  (when-let [^js socket (citrus/subscription r [:connection :socket])]
+    (.end socket)))
 
-    (p/-> (p/all [host port])
-          (connect))))
+(defn ^{:cmd "calva.v2.state"} state [r]
+  (output/append-line-and-show r (pr-str @(citrus/subscription r [:connection]))))
 
-(defn ^{:cmd "calva.v2.disconnect"} disconnect [db]
-  (when-let [^js socket (get-in db [:conn :socket])]
-    (.end socket))
-
-  db)
-(defn ^{:cmd "calva.v2.state"} state [db]
-  (let [^js output (:output db)]
-    (output/append-line-and-show output (state-str db)))
-
-  db)
-
-(defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [db]
-  (-> db
-      (connect)
+(defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [r]
+  (-> r
+      (connect-cmd)
       (disconnect)))
