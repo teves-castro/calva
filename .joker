@@ -1,1 +1,2 @@
-{:known-macros [kitchen-async.promise/let]}
+{:known-macros [kitchen-async.promise/let
+                kitchen-async.promise/->>]}

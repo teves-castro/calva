@@ -14,8 +14,11 @@
 (defmethod control :create-output-channel [_ [name greeting] _]
   (let [^js output-channel (-> (.-window vscode)
                                (.createOutputChannel name))]
-    {:state output-channel
-     :output-line greeting}))
+    {:state
+     output-channel
+     :output-line
+     {:output output-channel
+      :line greeting}}))
 
 (defmethod control :output-line [_ [line show] state]
   {:output-line {:output state
@@ -23,12 +26,12 @@
                  :show show}})
 
 (defn output-line
-  [r cn {:keys [line show ^js output] :as effect}]
-  (js/console.log "output-line: " line show))
-  (when output
-    (.appendLine output line)
-    (when show
-      (.show output false))))
+  [r cn {:keys [output line show] :as effect}]
+  (let [^js output (or output @(citrus/subscription r [:output]))]
+    (when output
+      (.appendLine output line)
+      (when show
+        (.show output false)))))
 
 (defn append-line
   "Append the given value and a line feed character to the channel."
