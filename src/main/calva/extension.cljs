@@ -1,38 +1,28 @@
 (ns calva.extension
   (:require
    ["vscode" :as vscode]
-
-   [kitchen-async.promise :as p]
-
    [calva.v2.language :as language]
+   [calva.v2.connection :as connection]
+   [citrus.core :as citrus]
    [calva.v2.state :as state]
-   [calva.v2.output :as output]
-   [calva.v2.cmd :as cmd]))
+   [calva.v2.output :as output]))
 
-(defn- register-command [context cmd]
+(defn- register-command [r context cmd]
   (-> (.-subscriptions context)
       (.push (-> vscode
                  (.-commands)
-                 (.registerCommand (-> cmd meta :cmd) #(db/transact! cmd))))))
+                 (.registerCommand (-> cmd meta :cmd) #(cmd r))))))
 
 (defn activate [^js context]
-  (-> (.-languages vscode)
-      (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
+  (let [reconciler state/reconciler]
+    (citrus/dispatch-sync! reconciler :output :create-output-channel "Calva says")
+    (output/append-line reconciler "Calva activated  ❤️")
+    (-> (.-languages vscode)
+        (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
 
-  (register-command context #'cmd/connect)
-  (register-command context #'cmd/disconnect)
-  (register-command context #'cmd/state)
-
-  ;; Initialize db
-  (db/transact! (fn [db]
-                  (let [^js output (-> (.-window vscode)
-                                       (.createOutputChannel "Calva"))
-
-                        new-db (assoc db :output output)]
-
-                    (output/append-line output "Calva is active.")
-
-                    new-db))))
+    (register-command reconciler context #'connection/connect)
+    (register-command reconciler context #'connection/disconnect)
+    (register-command reconciler context #'connection/state)))
 
 (defn exports []
   #js {:activate activate})

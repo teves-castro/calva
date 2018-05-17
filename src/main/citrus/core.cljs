@@ -25,15 +25,15 @@
   The only supported option is `:meta`"
   [{:keys [state controllers effect-handlers co-effects batched-updates chunked-updates]} & {:as options}]
   (r/Reconciler.
-    controllers
-    effect-handlers
-    co-effects
-    state
-    (volatile! [])
-    (volatile! nil)
-    (or batched-updates {:schedule-fn js/requestAnimationFrame :release-fn js/cancelAnimationFrame})
-    chunked-updates
-    (:meta options)))
+   controllers
+   effect-handlers
+   co-effects
+   state
+   (volatile! [])
+   (volatile! nil)
+   (or batched-updates   {:schedule-fn js/setImmediate :release-fn js/clearImmediate})
+   chunked-updates
+   (:meta options)))
 
 (defn dispatch!
   "Invoke an event on particular controller asynchronously
@@ -88,7 +88,6 @@
     args       - arguments to be passed into the controller"
   [reconciler event & args]
   (r/broadcast-sync! reconciler event args))
-
 
 (defn subscription
   "Create a subscription to state updates
