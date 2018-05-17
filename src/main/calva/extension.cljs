@@ -22,6 +22,7 @@
 
     (register-command reconciler context #'connection/connect-cmd)
     (register-command reconciler context #'connection/disconnect)
+    (register-command reconciler context #'connection/connect-then-disconnect)
     (register-command reconciler context #'connection/state)))
 
 (defn exports []
