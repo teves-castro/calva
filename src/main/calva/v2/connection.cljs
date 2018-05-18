@@ -60,6 +60,16 @@
    :output-line
    {:line (str "disconnect: " (pr-str state))}})
 
+(defmethod control :connect-then-disconnect [r _ state]
+  (let [new-state (assoc state
+                         :connecting? true)]
+    {:nrepl-connect
+     {:on-connect :disconnect
+      :on-end :on-end
+      :save-socket :save-socket}
+     :output-line
+     {:line (str "connect-then-disconnect: " (pr-str new-state))}}))
+
 (defn nrepl-connect [r cn {:keys [on-connect on-end save-socket]}]
   (p/let [host (gui/show-input-box {:placeHolder "nREPL Server Address"
                                     :ignoreFocusOut true
@@ -90,5 +100,4 @@
 
 ;;; This is not the way to do this. Obviously
 (defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [r]
-  (citrus/dispatch-sync! r :connection :connect)
-  (citrus/dispatch-sync! r :connection :disconnect))
+  (citrus/dispatch-sync! r :connection :connect-then-disconnect))
