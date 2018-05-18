@@ -96,7 +96,8 @@
   (citrus/dispatch! r :connection :disconnect))
 
 (defn ^{:cmd "calva.v2.state"} state [r]
-  (citrus/dispatch! r :output :output-line (str "connection state: " (pr-str @(citrus/subscription r [:connection])))))
+  (citrus/dispatch! r :output :output-line (str "connection state: " (pr-str @(citrus/subscription r [:connection]))))
+  (citrus/dispatch! r :output :output-line (str "all state: " (pr-str @r))))
 
 ;;; This is not the way to do this. Obviously
 (defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [r]
