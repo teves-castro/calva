@@ -47,12 +47,10 @@
                                     :value          "localhost"})
 
           port (gui/show-input-box {:placeHolder    "nREPL Server Port"
-                                    :ignoreFocusOut true})
+                                    :ignoreFocusOut true})]
 
-          try-to-connect         #(nrepl-try-to-connect sys %)]
-
-    (p/-> (p/all [host port])
-          (try-to-connect))))
+    (p/->> (p/all [host port])
+           (nrepl-try-to-connect sys))))
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db]}]
   (when-let [^js socket (get-in @*db [:conn :socket])]
