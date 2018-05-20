@@ -7,30 +7,27 @@
    [calva.v2.output :as output]
    [calva.v2.cmd :as cmd]))
 
-(defn- register-command [context cmd]
+(defn- register-command [context sys cmd]
   (-> (.-subscriptions context)
       (.push (-> vscode
                  (.-commands)
-                 (.registerCommand (-> cmd meta :cmd) cmd)))))
+                 (.registerCommand (-> cmd meta :cmd) #(cmd sys))))))
 
 (defn activate [^js context]
   (-> (.-languages vscode)
       (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
 
-  (register-command context #'cmd/connect)
-  (register-command context #'cmd/disconnect)
-  (register-command context #'cmd/state)
+  (let [^js output (-> (.-window vscode)
+                       (.createOutputChannel "Calva"))
 
-  ;; Initialize db
-  (db/mutate! (fn [db]
-                (let [^js output (-> (.-window vscode)
-                                     (.createOutputChannel "Calva"))
+        sys        {:*db    (atom {})
+                    :output output}]
 
-                      new-db (assoc db :output output)]
+    (register-command context sys #'cmd/connect)
+    (register-command context sys #'cmd/disconnect)
+    (register-command context sys #'cmd/state)
 
-                  (output/append-line output "Calva is active.")
-
-                  new-db))))
+    (output/append-line output "Calva is active.")))
 
 (defn exports []
   #js {:activate activate})

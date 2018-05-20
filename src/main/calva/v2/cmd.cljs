@@ -14,52 +14,47 @@
     (str "Connected to " (get-in db [:conn :host]) ":" (get-in db [:conn :port]) ".")
     "Disconnected."))
 
-(defn ^{:cmd "calva.v2.connect"} connect []
-  (p/let [host (gui/show-input-box {:placeHolder "nREPL Server Address"
-                                    :ignoreFocusOut true
-                                    :value "localhost"})
+(defn nrepl-connected [{:keys [*db output]}]
+  (db/mutate! *db (fn [db]
+                    (assoc-in db [:conn :connected?] true)))
 
-          port (gui/show-input-box {:placeHolder "nREPL Server Port"
+  (output/append-line output (state-str @*db))
+  (gui/show-information-message "Connected to nREPL server"))
+
+(defn nrepl-disconnected [{:keys [*db output]}]
+  (db/mutate! *db (fn [db]
+                    (dissoc db :conn)))
+
+  (output/append-line output (state-str @*db))
+  (gui/show-information-message "Disconnected from nREPL server"))
+
+(defn nrepl-try-to-connect [{:keys [*db] :as sys} host port]
+  (when (and host port)
+    (let [^js socket (nrepl/connect {:host       host
+                                     :port       port
+                                     :on-connect #(nrepl-connected sys)
+                                     :on-end     #(nrepl-disconnected sys)})]
+
+      (db/mutate! *db (fn [db]
+                        (-> db
+                            (assoc-in [:conn :host] host)
+                            (assoc-in [:conn :port] port)
+                            (assoc-in [:conn :socket] socket)))))))
+
+(defn ^{:cmd "calva.v2.connect"} connect [{:keys [*db output] :as sys}]
+  (p/let [host (gui/show-input-box {:placeHolder    "nREPL Server Address"
+                                    :ignoreFocusOut true
+                                    :value          "localhost"})
+
+          port (gui/show-input-box {:placeHolder    "nREPL Server Port"
                                     :ignoreFocusOut true})]
 
-    (p/then (p/all [host port])
-            (fn [[host port]]
-              ;; TODO
-              (when (and host port)
-                (let [^js socket (nrepl/connect {:host host
-                                                 :port port
-                                                 :on-connect (fn []
-                                                               (db/mutate! (fn [{:keys [output] :as db}]
-                                                                             (let [new-db (assoc-in db [:conn :connected?] true)]
-                                                                               (output/append-line output (state-str new-db))
-                                                                               (gui/show-information-message "Connected to nREPL server")
+    (nrepl-try-to-connect sys host port)))
 
-                                                                               new-db))))
-                                                 :on-end (fn []
-                                                           (db/mutate! (fn [{:keys [output] :as db}]
-                                                                         (let [new-db (dissoc db :conn)]
-                                                                           (output/append-line output (state-str new-db))
-                                                                           (gui/show-information-message  "Disconnected from nREPL server")
+(defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db]}]
+  (when-let [^js socket (get-in @*db [:conn :socket])]
+    (.end socket)))
 
-                                                                           new-db))))})]
-
-                  (db/mutate! (fn [db]
-                                (-> db
-                                    (assoc-in [:conn :host] host)
-                                    (assoc-in [:conn :port] port)
-                                    (assoc-in [:conn :socket] socket))))))))))
-
-(defn ^{:cmd "calva.v2.disconnect"} disconnect []
-  (db/mutate! (fn [db]
-                (when-let [^js socket (get-in db [:conn :socket])]
-                  (.end socket))
-
-                db)))
-
-(defn ^{:cmd "calva.v2.state"} state []
-  (db/mutate! (fn [db]
-                (let [^js output (:output db)]
-                  (output/append-line-and-show output (state-str db)))
-
-                db)))
+(defn ^{:cmd "calva.v2.state"} state [{:keys [*db output]}]
+  (output/append-line-and-show output (state-str @*db)))
 
