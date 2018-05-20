@@ -101,4 +101,4 @@
 
 ;;; This is not the way to do this. Obviously
 (defn ^{:cmd "calva.v2.connectThenDisconnect"} connect-then-disconnect [r]
-  (citrus/dispatch-sync! r :connection :connect-then-disconnect))
+  (citrus/dispatch! r :connection :connect-then-disconnect))
