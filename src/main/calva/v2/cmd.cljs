@@ -28,7 +28,7 @@
   (output/append-line output (state-str @*db))
   (gui/show-information-message "Disconnected from nREPL server"))
 
-(defn nrepl-try-to-connect [{:keys [*db] :as sys} [host port]]
+(defn nrepl-try-to-connect [{:keys [*db] :as sys} host port]
   (when (and host port)
     (let [^js socket (nrepl/connect {:host       host
                                      :port       port
@@ -49,8 +49,7 @@
           port (gui/show-input-box {:placeHolder    "nREPL Server Port"
                                     :ignoreFocusOut true})]
 
-    (p/->> (p/all [host port])
-           (nrepl-try-to-connect sys))))
+    (nrepl-try-to-connect sys host port)))
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db]}]
   (when-let [^js socket (get-in @*db [:conn :socket])]
