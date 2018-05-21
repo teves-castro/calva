@@ -3,6 +3,7 @@
    ["net" :as net]
    ["bencoder" :as bencoder]
    ["buffer" :refer [Buffer]]
+   ["nrepl-client" :as nrepl-client]
    [clojure.string :as str]))
 
 (def CONTINUATION_ERROR_MESSAGE
@@ -12,7 +13,7 @@
   "Connects to a socket-based REPL at the given host (defaults to localhost) and port."
   [options]
   (let [{:keys [host port on-connect on-error on-end] :or {host "localhost"}} options]
-    (doto (net/createConnection #js {:host host :port port})
+    (doto (.connect nrepl-client #js {:host host :port port})
       (.once "connect" (fn []
                          (when on-connect
                            (on-connect))))
@@ -21,7 +22,7 @@
                      (when on-end
                        (on-end))))
 
-      (.once "error" (fn [error]
+      (.on "error" (fn [error]
                        (when on-error
                          (on-error error)))))))
 
