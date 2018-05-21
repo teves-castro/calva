@@ -9,14 +9,11 @@
    [calva.v2.output :as output]
    [calva.v2.gui :as gui]))
 
-
 (defn connected-str [{:keys [conn]}]
   (str "Connected - nrepl://" (:host conn) ":" (:port conn)))
 
-
 (defn disconnected-str [{:keys [conn]}]
   (str "Disconnected - nrepl://" (:host conn) ":" (:port conn)))
-
 
 (defn- state-str [db]
   (if (get-in db [:conn :connected?])
@@ -32,12 +29,12 @@
   (gui/show-information-message (connected-str @*db))
 
   (-> (get-in @*db [:conn :socket])
-      (.clone (fn [err result]
-                (when-not err
-                  (let [[{:keys [new-session]}] (js->clj result :keywordize-keys true)]
-                    (output/append-line output "Clojure session initialized.")
+      (nrepl/clone (fn [err result]
+                     (when-not err
+                       (let [[{:keys [new-session]}] (js->clj result :keywordize-keys true)]
+                         (output/append-line output "Clojure session initialized.")
 
-                    (db/mutate! *db #(assoc-in % [:conn :clj-session] new-session))))))))
+                         (db/mutate! *db #(assoc-in % [:conn :clj-session] new-session))))))))
 
 (defn nrepl-disconnected [{:keys [*db output]}]
   (db/mutate! *db #(assoc-in % [:conn :connected?] false))
@@ -67,7 +64,7 @@
           port (gui/show-input-box {:placeHolder    "nREPL Server Port"
                                     :ignoreFocusOut true})]
 
-         (nrepl-try-to-connect sys host port)))
+    (nrepl-try-to-connect sys host port)))
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db]}]
   (when-let [^js socket (get-in @*db [:conn :socket])]

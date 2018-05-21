@@ -4,7 +4,8 @@
    ["bencoder" :as bencoder]
    ["buffer" :refer [Buffer]]
    ["nrepl-client" :as nrepl-client]
-   [clojure.string :as str]))
+   [clojure.string :as str])
+  (:refer-clojure :exclude [clone]))
 
 (def CONTINUATION_ERROR_MESSAGE
   "Unexpected continuation: \"")
@@ -23,8 +24,11 @@
                        (on-end))))
 
       (.on "error" (fn [error]
-                       (when on-error
-                         (on-error error)))))))
+                     (when on-error
+                       (on-error error)))))))
+
+(defn clone [client callback]
+  (.clone client callback))
 
 (defn- decode [buffers]
   (mapcat
