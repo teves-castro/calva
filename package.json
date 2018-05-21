@@ -220,7 +220,6 @@
                 "title": "Attach (or re-attach) a Clojurescript session",
                 "category": "Calva"
             },
-
             {
                 "title": "Connect (v2)",
                 "category": "Calva",
@@ -325,6 +324,7 @@
         "lodash": "4.17.4",
         "net": "1.0.2",
         "npm": "^6.0.0",
+        "nrepl-client": "^0.2.3",
         "vscode": "^1.1.4",
         "vscode-extension-telemetry": "0.0.15"
     },
