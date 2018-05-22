@@ -20,6 +20,10 @@
                      (when on-error
                        (on-error error)))))))
 
-(defn clone [client callback]
-  (.clone client callback))
+(defn clone
+  ([client callback]
+    (.clone client callback))
+  
+  ([client session callback]
+    (.clone client session callback)))
 
