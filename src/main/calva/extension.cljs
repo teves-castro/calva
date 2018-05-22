@@ -7,6 +7,9 @@
    [calva.v2.output :as output]
    [calva.v2.cmd :as cmd]))
 
+(def *db
+  (atom {}))
+
 (defn- register-command [context sys cmd]
   (-> (.-subscriptions context)
       (.push (-> vscode
@@ -20,7 +23,7 @@
   (let [^js output (-> (.-window vscode)
                        (.createOutputChannel "Calva"))
 
-        sys        {:*db    (atom {})
+        sys        {:*db    *db
                     :output output}]
 
     (register-command context sys #'cmd/connect)
