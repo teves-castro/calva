@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import * as state from '../state';
-import repl from '../repl/client';
+import nreplClient from 'nrepl-client';
 import * as util from '../utilities';
 
 class DocumentFormattingEditProvider {
@@ -15,7 +15,7 @@ class DocumentFormattingEditProvider {
 
         if (current.get('connected')) {
             return new Promise((resolve, reject) => {
-                let client = repl.create().once('connect', () => {
+                let client = nreplClient.connect().once('connect', () => {
                     let msg = {
                         op: "format-code",
                         code: doc.getText(),

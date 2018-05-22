@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import * as state from '../state';
-import repl from '../repl/client';
+import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
 import * as util from '../utilities';
 
@@ -18,7 +18,7 @@ export default class DefinitionProvider {
         if (this.state.deref().get('connected')) {
             return new Promise((resolve, reject) => {
                 let current = scope.state.deref(),
-                    client = repl.create().once('connect', () => {
+                    client = nreplClient.connect().once('connect', () => {
                         let msg = message.infoMsg(util.getSession(filetype),
                             util.getNamespace(document.getText()), text);
                         client.send(msg, function (results) {

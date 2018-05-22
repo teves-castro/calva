@@ -1,6 +1,6 @@
 import vscode from 'vscode';
 import * as state from '../state';
-import repl from '../repl/client';
+import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
 import * as util from '../utilities';
 
@@ -28,7 +28,7 @@ export default class CompletionItemProvider {
         if (this.state.deref().get("connected")) {
             return new Promise((resolve, reject) => {
                 let current = this.state.deref(),
-                    client = repl.create()
+                    client = nreplClient.connect()
                         .once('connect', () => {
                             let msg = message.completeMsg(util.getSession(filetype),
                                 util.getNamespace(document.getText()), text),
@@ -68,7 +68,7 @@ export default class CompletionItemProvider {
         return new Promise((resolve, reject) => {
             let current = this.state.deref();
             if (current.get('connected')) {
-                let client = repl.create().once('connect', () => {
+                let client = nreplClient.connect().once('connect', () => {
                     let document = vscode.window.activeTextEditor.document,
                         msg = message.infoMsg(util.getSession(filetype),
                             util.getNamespace(document.getText()), item.label);

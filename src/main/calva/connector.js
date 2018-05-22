@@ -2,9 +2,9 @@ import vscode from 'vscode';
 import _ from 'lodash';
 import fs from 'fs';
 import * as state from './state';
-import repl from './repl/client';
 import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
+import migration from 'goog:calva.migration';
 import * as util from './utilities';
 import shadow from './shadow';
 import status from './status';
@@ -20,7 +20,7 @@ function nreplPortFile() {
     }
 }
 
-function disconnect(options = null, callback = () => { }) {
+function closeSessions(client, callback = () => { }) {
     let chan = state.deref().get('outputChannel'),
         connections = [];
 
@@ -37,54 +37,54 @@ function disconnect(options = null, callback = () => { }) {
 
     let n = connections.length;
     if (n > 0) {
-        let client = nreplClient.connect(options).once('connect', () => {
-            client.send(message.listSessionsMsg(), results => {
-                client.end();
-                let sessions = _.find(results, 'sessions')['sessions'];
-                if (sessions) {
-                    connections.forEach(connection => {
-                        let sessionType = connection[0],
-                            sessionId = connection[1]
-                        if (sessions.indexOf(sessionId) != -1) {
-                            let client = nreplClient.connect(options).once('connect', () => {
-                                client.send(message.closeMsg(sessionId), () => {
-                                    client.end();
-                                    n--;
-                                    state.cursor.set(sessionType, null);
-                                    chan.appendLine("Disconnected session: " + sessionType);
-                                    if (n == 0) {
-                                        callback();
-                                    }
-                                });
-                            });
-                        } else {
-                            if (--n == 0) {
+        client.lsSessions((err, results) => {
+            let sessions = _.find(results, 'sessions')['sessions'];
+            if (sessions) {
+                connections.forEach(connection => {
+                    let sessionType = connection[0],
+                        sessionId = connection[1]
+                    if (sessions.indexOf(sessionId) != -1) {
+                        client.close(sessionId, () => {
+                            n--;
+                            state.cursor.set(sessionType, null);
+                            chan.appendLine("Disconnected session: " + sessionType);
+                            if (n == 0) {
                                 callback();
                             }
+                        });
+                    } else {
+                        if (--n == 0) {
+                            callback();
                         }
-                    });
-                } else {
-                    callback();
-                }
-            });
+                    }
+                });
+            } else {
+                callback();
+            }
         });
     } else {
         callback();
     }
 }
 
+function disconnect() {
+
+}
+
 function connectToHost(hostname, port) {
     let chan = state.deref().get('outputChannel');
 
-    disconnect({ hostname, port }, () => {
-        state.cursor.set('connecting', true);
-        status.update();
+    state.cursor.set('connecting', true);
+    status.update();
 
-        let onConnect = () => {
+    let client = nreplClient.connect({
+        "host": hostname,
+        "port": port
+    }).once('connect', () => {
+        closeSessions(client, () => {
             chan.appendLine("Hooking up nREPL sessions...");
 
-            client.send(message.cloneMsg(), cloneResults => {
-                client.end();
+            client.clone((err, cloneResults) => {
                 let cljSession = _.find(cloneResults, 'new-session')['new-session'];
                 if (cljSession) {
                     state.cursor.set("clj", cljSession);
@@ -95,7 +95,7 @@ function connectToHost(hostname, port) {
                     chan.appendLine("Connected session: clj");
                     terminal.createREPLTerminal('clj', null, chan);
 
-                    makeCljsSessionClone(hostname, port, cljSession, null, (cljsSession, shadowBuild) => {
+                    makeCljsSessionClone(client, cljSession, null, (cljsSession, shadowBuild) => {
                         if (cljsSession) {
                             setUpCljsRepl(cljsSession, chan, shadowBuild);
                         }
@@ -109,12 +109,6 @@ function connectToHost(hostname, port) {
                     chan.appendLine("Failed connecting. (Calva needs a REPL started before it can connect.)");
                 }
             });
-        };
-
-        let client = nreplClient.connect({
-            "host": hostname,
-            "port": port,
-            "on-connect": onConnect
         });
     });
 }
@@ -125,7 +119,7 @@ function setUpCljsRepl(cljsSession, chan, shadowBuild) {
     terminal.createREPLTerminal('cljs', shadowBuild, chan);
 }
 
-function makeCljsSessionClone(hostname, port, session, shadowBuild, callback) {
+function makeCljsSessionClone(client, session, shadowBuild, callback) {
     let chan = state.deref().get('outputChannel');
 
     if (shadow.isShadowCljs() && !shadowBuild) {
@@ -135,49 +129,43 @@ function makeCljsSessionClone(hostname, port, session, shadowBuild, callback) {
             ignoreFocusOut: true
         }).then(build => {
             if (build) {
-                makeCljsSessionClone(hostname, port, session, build, callback);
+                makeCljsSessionClone(client, session, build, callback);
             }
         });
     } else {
-        let client = nreplClient.connect({ hostname, port }).once('connect', () => {
-            client.send(message.cloneMsg(session), results => {
-                client.end();
-                let cljsSession = _.find(results, 'new-session')['new-session'];
-                if (cljsSession) {
-                    let client = nreplClient.connect({ hostname, port }).once('connect', () => {
-                        let msg = shadowBuild ? message.startShadowCljsReplMsg(cljsSession, shadowBuild) : message.startCljsReplMsg(cljsSession);
-                        client.send(msg, cljsResults => {
-                            client.end();
-                            let valueResult = _.find(cljsResults, 'value'),
-                                nsResult = _.find(cljsResults, 'ns');
-                            if (!shadowBuild && nsResult) {
-                                state.cursor.set('shadowBuild', null);
-                                callback(cljsSession);
-                            } else if (shadowBuild && valueResult && valueResult.value.match(":selected " + shadowBuild)) {
-                                state.cursor.set('shadowBuild', shadowBuild);
-                                callback(cljsSession, shadowBuild);
-                            } else {
-                                if (shadowBuild) {
-                                    let failed = `Failed starting cljs repl for shadow-cljs build: ${shadowBuild}`;
-                                    state.cursor.set('shadowBuild', null);
-                                    chan.appendLine(`${failed}. Is the build running and conected?`);
-                                    console.error(failed, cljsResults);
-                                } else {
-                                    let failed = `Failed to start ClojureScript REPL with command: ${msg.code}`;
-                                    console.error(failed, cljsResults);
-                                    chan.appendLine(`${failed}. Is the app running in the browser and conected?`);
-                                }
-                                callback(null);
-                            }
-                        })
-                    });
-                } else {
-                    let failed = `Failed to clone nREPL session for ClojureScript REPL`;
-                    console.error(failed, results);
-                    chan.appendLine(failed);
-                    callback(null);
-                }
-            });
+        client.clone(session, (err, results) => {
+            let cljsSession = _.find(results, 'new-session')['new-session'];
+            if (cljsSession) {
+                let msg = shadowBuild ? message.startShadowCljsReplMsg(cljsSession, shadowBuild) : message.startCljsReplMsg(cljsSession);
+                client.send(migration.jsify(msg), (err, cljsResults) => {
+                    let valueResult = _.find(cljsResults, 'value'),
+                        nsResult = _.find(cljsResults, 'ns');
+                    if (!shadowBuild && nsResult) {
+                        state.cursor.set('shadowBuild', null);
+                        callback(cljsSession);
+                    } else if (shadowBuild && valueResult && valueResult.value.match(":selected " + shadowBuild)) {
+                        state.cursor.set('shadowBuild', shadowBuild);
+                        callback(cljsSession, shadowBuild);
+                    } else {
+                        if (shadowBuild) {
+                            let failed = `Failed starting cljs repl for shadow-cljs build: ${shadowBuild}`;
+                            state.cursor.set('shadowBuild', null);
+                            chan.appendLine(`${failed}. Is the build running and conected?`);
+                            console.error(failed, cljsResults);
+                        } else {
+                            let failed = `Failed to start ClojureScript REPL with command: ${msg.code}`;
+                            console.error(failed, cljsResults);
+                            chan.appendLine(`${failed}. Is the app running in the browser and conected?`);
+                        }
+                        callback(null);
+                    }
+                })
+            } else {
+                let failed = `Failed to clone nREPL session for ClojureScript REPL`;
+                console.error(failed, results);
+                chan.appendLine(failed);
+                callback(null);
+            }
         });
     }
 }

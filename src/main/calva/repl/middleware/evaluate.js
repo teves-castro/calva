@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import _ from 'lodash';
 import * as state from '../../state';
-import repl from '../client';
+import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
 import annotations from '../../providers/annotations';
 import select from './select';
@@ -15,7 +15,7 @@ function evaluateMsg(msg, startStr, errorStr, callback) {
 
     let evalClient = null;
     new Promise((resolve, reject) => {
-        evalClient = repl.create().once('connect', () => {
+        evalClient = nreplClient.connect().once('connect', () => {
             evalClient.send(msg, (result) => {
                 let exceptions = _.some(result, "ex"),
                     errors = _.some(result, "err");

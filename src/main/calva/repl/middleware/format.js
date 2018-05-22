@@ -1,5 +1,5 @@
 import * as state from '../../state';
-import repl from '../client';
+import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
 import * as util from '../../utilities';
 
@@ -8,7 +8,7 @@ function formatCode(code, document = {}) {
     let doc = util.getDocument(document),
         formatClient = null;
     return new Promise((resolve, reject) => {
-        formatClient = repl.create().once('connect', () => {
+        formatClient = nreplClient.connect().once('connect', () => {
             let msg = message.formatMsg(util.getSession(util.getFileType(doc)), code);
             formatClient.send(msg, function (results) {
                 let r = results[0];

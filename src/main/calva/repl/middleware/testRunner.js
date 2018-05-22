@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import _ from 'lodash';
 import * as state from '../../state';
-import repl from '../client';
+import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
 import evaluate from './evaluate';
 import * as util from '../../utilities';
@@ -104,7 +104,7 @@ function runTests(messages, startStr, errorStr, log = true) {
         // Thus we only send new messages when a message has returned.
         (function loop(i) {
             new Promise((resolve, reject) => {
-                testClient = repl.create().once('connect', () => {
+                testClient = nreplClient.connect().once('connect', () => {
                     testClient.send(messages[i], (result) => {
                         exceptions += _.some(result, "ex");
                         errors += _.some(result, "err");
