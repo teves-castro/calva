@@ -320,6 +320,7 @@
     "dependencies": {
         "bencoder": "0.0.5",
         "buffer": "^5.0.7",
+        "nrepl-client": "~0.2.3",
         "find": "0.2.9",
         "immutable": "3.8.1",
         "immutable-cursor": "2.0.1",

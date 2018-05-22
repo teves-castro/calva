@@ -3,6 +3,7 @@ import _ from 'lodash';
 import fs from 'fs';
 import * as state from './state';
 import repl from './repl/client';
+import nreplClient from 'nrepl-client';
 import message from 'goog:calva.repl.message';
 import * as util from './utilities';
 import shadow from './shadow';
@@ -36,7 +37,7 @@ function disconnect(options = null, callback = () => { }) {
 
     let n = connections.length;
     if (n > 0) {
-        let client = repl.create(options).once('connect', () => {
+        let client = nreplClient.connect(options).once('connect', () => {
             client.send(message.listSessionsMsg(), results => {
                 client.end();
                 let sessions = _.find(results, 'sessions')['sessions'];
@@ -45,7 +46,7 @@ function disconnect(options = null, callback = () => { }) {
                         let sessionType = connection[0],
                             sessionId = connection[1]
                         if (sessions.indexOf(sessionId) != -1) {
-                            let client = repl.create(options).once('connect', () => {
+                            let client = nreplClient.connect(options).once('connect', () => {
                                 client.send(message.closeMsg(sessionId), () => {
                                     client.end();
                                     n--;
@@ -110,7 +111,7 @@ function connectToHost(hostname, port) {
             });
         };
 
-        let client = repl.create({
+        let client = nreplClient.connect({
             "host": hostname,
             "port": port,
             "on-connect": onConnect
@@ -138,12 +139,12 @@ function makeCljsSessionClone(hostname, port, session, shadowBuild, callback) {
             }
         });
     } else {
-        let client = repl.create({ hostname, port }).once('connect', () => {
+        let client = nreplClient.connect({ hostname, port }).once('connect', () => {
             client.send(message.cloneMsg(session), results => {
                 client.end();
                 let cljsSession = _.find(results, 'new-session')['new-session'];
                 if (cljsSession) {
-                    let client = repl.create({ hostname, port }).once('connect', () => {
+                    let client = nreplClient.connect({ hostname, port }).once('connect', () => {
                         let msg = shadowBuild ? message.startShadowCljsReplMsg(cljsSession, shadowBuild) : message.startCljsReplMsg(cljsSession);
                         client.send(msg, cljsResults => {
                             client.end();
