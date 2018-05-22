@@ -67,10 +67,6 @@ function closeSessions(client, callback = () => { }) {
     }
 }
 
-function disconnect() {
-
-}
-
 function connectToHost(hostname, port) {
     let chan = state.deref().get('outputChannel');
 
@@ -81,6 +77,7 @@ function connectToHost(hostname, port) {
         "host": hostname,
         "port": port
     }).once('connect', () => {
+        state.cursor.set("nrepl-client", client);
         closeSessions(client, () => {
             chan.appendLine("Hooking up nREPL sessions...");
 
@@ -234,6 +231,27 @@ function connect(isAutoConnect = false) {
         promptForNreplUrlAndConnect(null);
     });
 }
+
+function disconnect() {
+    let current = state.deref(),
+        chan = current.get("outputChannel"),
+        client = current.get("nrepl-client"),
+        connected = cuurent.het("connected");
+    if (connected && client) {
+        closeSessions(client, () => {
+            const host = corrent.get("host"),
+                port = current.get("port");
+            state.cursor.set("nrepl-client", null);
+            state.cursor.set("connected", false);
+            chan.appendLine(`Disconnected from nrepl://${host}:${port}`);
+        });
+    } else {
+        if (connected) {
+            state.cursor.set("connected", false);
+        }
+    }
+}
+
 
 function reconnect() {
     state.reset();
