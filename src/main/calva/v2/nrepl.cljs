@@ -1,7 +1,17 @@
 (ns calva.v2.nrepl
   (:require
-   ["nrepl-client" :as nrepl-client])
+   ["vscode" :as vscode]
+   ["nrepl-client" :as nrepl-client]
+   
+   [cljs-node-io.core :as io.core]
+   [cljs-node-io.fs :as io.fs])
+  
   (:refer-clojure :exclude [clone]))
+
+(defn slurp-port []
+  (let [path (str (-> vscode .-workspace .-rootPath) "/.nrepl-port")]
+    (when (io.fs/file? path)
+      (io.core/slurp path))))
 
 (defn connect
   "Connects to a socket-based REPL at the given host (defaults to localhost) and port."
