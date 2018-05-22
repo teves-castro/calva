@@ -57,12 +57,13 @@
                             (assoc-in [:conn :socket] socket)))))))
 
 (defn ^{:cmd "calva.v2.connect"} connect [{:keys [*db output] :as sys}]
-  (p/let [host (gui/show-input-box {:placeHolder    "nREPL Server Address"
-                                    :ignoreFocusOut true
+  (p/let [host (gui/show-input-box {:ignoreFocusOut true
+                                    :prompt         "nREPL Host"
                                     :value          "localhost"})
 
-          port (gui/show-input-box {:placeHolder    "nREPL Server Port"
-                                    :ignoreFocusOut true})]
+          port (gui/show-input-box {:ignoreFocusOut true
+                                    :prompt         "nREPL Port"
+                                    :value          (nrepl/slurp-port)})]
 
     (nrepl-try-to-connect sys host port)))
 
