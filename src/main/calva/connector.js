@@ -243,11 +243,13 @@ function disconnect() {
                 port = current.get("port");
             state.cursor.set("nrepl-client", null);
             state.cursor.set("connected", false);
+            status.update();
             chan.appendLine(`Disconnected from nrepl://${host}:${port}`);
         });
     } else {
         if (connected) {
             state.cursor.set("connected", false);
+            status.update();
         }
     }
 }
@@ -255,6 +257,7 @@ function disconnect() {
 
 function reconnect() {
     state.reset();
+    console.log("reconnect");
     connect(true);
 }
 
