@@ -37,3 +37,5 @@
   ([client session callback]
     (.clone client session callback)))
 
+(defn close [client session callback]
+  (.close client session callback))
