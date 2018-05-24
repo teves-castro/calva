@@ -10,25 +10,33 @@
 (def *db
   (atom {}))
 
-(defn- register-command [context sys cmd]
-  (-> (.-subscriptions context)
-      (.push (-> vscode
-                 (.-commands)
-                 (.registerCommand (-> cmd meta :cmd) #(cmd sys))))))
+
+(defn register-disposable [^js context ^js disposable]
+  (.push context.subscriptions disposable))
+
+
+(defn- register-command [sys cmd]
+  (vscode/commands.registerCommand (-> cmd meta :cmd) #(cmd sys)))
+
+
+(defn setup-cmd [^js context sys cmd]
+  (->> (register-command sys cmd)
+       (register-disposable context)))
+
 
 (defn activate [^js context]
-  (-> (.-languages vscode)
-      (.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.)))
-
-  (let [^js output (-> (.-window vscode)
-                       (.createOutputChannel "Calva"))
+  (vscode/languages.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.))
+  
+  (let [^js output (vscode/window.createOutputChannel "Calva")
 
         sys        {:*db    *db
                     :output output}]
 
-    (register-command context sys #'cmd/connect)
-    (register-command context sys #'cmd/disconnect)
-    (register-command context sys #'cmd/state)
+    (register-disposable context (vscode/Disposable.from output))
+    
+    (setup-cmd context sys #'cmd/connect)
+    (setup-cmd context sys #'cmd/disconnect)
+    (setup-cmd context sys #'cmd/state)
 
     (output/append-line output "Calva is active.")))
 
