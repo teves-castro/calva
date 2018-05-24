@@ -30,17 +30,15 @@
   (db/mutate! *db (fn [db]
                     (assoc-in db [:conn :connected?] true)))
 
-  (output/append-line output (state-str @*db))
-
   (gui/show-information-message (connected-str @*db))
 
   (-> (get-in @*db [:conn :socket])
       (nrepl/clone (fn [err result]
                      (when-not err
                        (let [[{:keys [new-session]}] (js->clj result :keywordize-keys true)]
-                         (output/append-line output "Clojure session initialized.")
-
-                         (db/mutate! *db #(assoc-in % [:conn :clj-session] new-session))))))))
+                         (db/mutate! *db #(assoc-in % [:conn :clj-session] new-session))
+                         
+                         (output/append-line output (state-str @*db))))))))
 
 (defn nrepl-disconnected [{:keys [*db output]}]
   (db/mutate! *db #(assoc-in % [:conn :connected?] false))

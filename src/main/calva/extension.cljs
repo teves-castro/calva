@@ -43,7 +43,7 @@
     (setup-cmd context @*sys #'cmd/disconnect)
     (setup-cmd context @*sys #'cmd/state)
 
-    (output/append-line output "Calva is active.")))
+    (output/append-line output "Happy Clojure & ClojureScript coding! ❤️ \n")))
 
 
 (defn deactivate []
