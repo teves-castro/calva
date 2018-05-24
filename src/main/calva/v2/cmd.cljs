@@ -73,17 +73,25 @@
 
     (nrepl-try-to-connect sys host port)))
 
-(defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db]}]
+(defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db output]}]
+
+  ;; TODO
+  ;; Close sessions before disconnecting
+  ;; 1. Close ClojureScript session if there is one
+  ;; 2. Close Clojure session - this one is created as soon as Calva connects
+  ;;
+  ;; *This should also be done whenever Calva is disposed
+
   (when-let [^js socket (get-in @*db [:conn :socket])]
-
-    ;; TODO
-    ;; Close sessions before disconnecting
-    ;; 1. Close ClojureScript session if there is one
-    ;; 2. Close Clojure session - this one is created as soon as Calva connects
-    ;;
-    ;; *This should also be done whenever Calva is disposed
-
-    (.end socket)))
+    (p/do
+     ;; close clj-session
+     (when-let [clj-session (get-in @*db [:conn :clj-session])]
+       (p/promise [resolve reject]
+          (nrepl/close socket clj-session (fn [err result]
+                                            (if err 
+                                              (reject err)
+                                              (resolve result))))))
+     (.end socket))))
 
 (defn ^{:cmd "calva.v2.state"} state [{:keys [*db output]}]
   (output/append-line-and-show output (state-str @*db)))
