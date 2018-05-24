@@ -5,9 +5,14 @@
    [calva.v2.language :as language]
    [calva.v2.db :as db]
    [calva.v2.output :as output]
-   [calva.v2.cmd :as cmd]))
+   [calva.v2.cmd :as cmd]
+   [calva.v2.nrepl :as nrepl]))
 
 (def *db
+  (atom {}))
+
+
+(def *sys
   (atom {}))
 
 
@@ -27,18 +32,24 @@
 (defn activate [^js context]
   (vscode/languages.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.))
   
-  (let [^js output (vscode/window.createOutputChannel "Calva")
+  (let [^js output (vscode/window.createOutputChannel "Calva")]
 
-        sys        {:*db    *db
-                    :output output}]
-
+    (reset! *sys {:*db    *db
+                  :output output})
+    
     (register-disposable context (vscode/Disposable.from output))
     
-    (setup-cmd context sys #'cmd/connect)
-    (setup-cmd context sys #'cmd/disconnect)
-    (setup-cmd context sys #'cmd/state)
+    (setup-cmd context @*sys #'cmd/connect)
+    (setup-cmd context @*sys #'cmd/disconnect)
+    (setup-cmd context @*sys #'cmd/state)
 
     (output/append-line output "Calva is active.")))
 
+
+(defn deactivate []
+  (nrepl/disconnect (get @*db :conn)))
+
+
 (defn exports []
-  #js {:activate activate})
+  #js {:activate   activate
+       :deactivate deactivate})

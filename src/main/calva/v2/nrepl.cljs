@@ -3,6 +3,7 @@
    ["vscode" :as vscode]
    ["nrepl-client" :as nrepl-client]
    
+   [kitchen-async.promise :as p]
    [cljs-node-io.core :as io.core]
    [cljs-node-io.fs :as io.fs])
   
@@ -50,3 +51,25 @@
   `session` The ID of the session to be closed."
   [client session callback]
   (.close client session callback))
+
+
+(defn disconnect [{:keys [socket clj-session cljs-session]}]
+  ;; TODO
+  ;; Close sessions before disconnecting
+  ;; 1. Close ClojureScript session if there is one
+  ;; 2. Close Clojure session - this one is created as soon as Calva connects
+  ;;
+  ;; *This should also be done whenever Calva is disposed
+
+  (when socket
+    (p/do
+     ;; close clj-session
+     (when clj-session
+       (p/promise [resolve reject]
+          (close socket clj-session (fn [err result]
+                                      (if err 
+                                        (reject err)
+                                        (resolve result))))))
+     ;; once the sessions were closed
+     ;; it's fine to disconnect
+     (.end socket))))
