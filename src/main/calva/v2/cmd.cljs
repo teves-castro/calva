@@ -91,6 +91,8 @@
                                             (if err 
                                               (reject err)
                                               (resolve result))))))
+     ;; once the sessions were closed
+     ;; it's fine to disconnect
      (.end socket))))
 
 (defn ^{:cmd "calva.v2.state"} state [{:keys [*db output]}]
