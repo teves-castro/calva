@@ -2,6 +2,7 @@
   (:require
    ["vscode" :as vscode]
 
+   [clojure.string :as str]
    [kitchen-async.promise :as p]
 
    [calva.v2.db :as db]
@@ -16,9 +17,14 @@
   (str "Disconnected - nrepl://" (:host conn) ":" (:port conn)))
 
 (defn- state-str [db]
-  (if (get-in db [:conn :connected?])
-    (connected-str db)
-    (disconnected-str db)))
+  (let [connection (if (get-in db [:conn :connected?])
+                     (connected-str db)
+                     (disconnected-str db))
+        
+        clj-session (when-let [clj-session (get-in db [:conn :clj-session])]
+                      (str "Clojure session: " clj-session))]
+    
+    (str/join "\n" [connection clj-session])))
 
 (defn nrepl-connected [{:keys [*db output]}]
   (db/mutate! *db (fn [db]
