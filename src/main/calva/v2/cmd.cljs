@@ -69,6 +69,14 @@
 
 (defn ^{:cmd "calva.v2.disconnect"} disconnect [{:keys [*db]}]
   (when-let [^js socket (get-in @*db [:conn :socket])]
+
+    ;; TODO
+    ;; Close sessions before disconnecting
+    ;; 1. Close ClojureScript session if there is one
+    ;; 2. Close Clojure session - this one is created as soon as Calva connects
+    ;;
+    ;; *This should also be done whenever Calva is disposed
+
     (.end socket)))
 
 (defn ^{:cmd "calva.v2.state"} state [{:keys [*db output]}]
