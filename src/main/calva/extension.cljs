@@ -2,6 +2,8 @@
   (:require
    ["vscode" :as vscode]
 
+   [cljfmt.core :as cljfmt]
+   
    [calva.v2.language :as language]
    [calva.v2.db :as db]
    [calva.v2.output :as output]
@@ -29,6 +31,14 @@
        (register-disposable context)))
 
 
+(deftype ClojureDocumentRangeFormattingEditProvider []
+  Object
+  (provideDocumentRangeFormattingEdits [_ document range options token]
+    (let [pretty (cljfmt/reformat-string (.getText document range) {:remove-consecutive-blank-lines? false})
+          edit (vscode/TextEdit.replace range pretty)]
+      #js [edit])))
+
+
 (defn activate [^js context]
   (vscode/languages.setLanguageConfiguration "clojure" (language/ClojureLanguageConfiguration.))
   
@@ -38,6 +48,13 @@
                   :output output})
     
     (register-disposable context (vscode/Disposable.from output))
+    
+    
+    (let [scheme   #js {:language "clojure" 
+                        :scheme   "file"}
+          provider (ClojureDocumentRangeFormattingEditProvider.)]
+     (register-disposable context (vscode/languages.registerDocumentRangeFormattingEditProvider scheme provider)))
+    
     
     (setup-cmd context @*sys #'cmd/connect)
     (setup-cmd context @*sys #'cmd/disconnect)
