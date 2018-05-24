@@ -31,11 +31,22 @@
                        (on-error error)))))))
 
 (defn clone
+  "Clones the current session, returning the ID of the newly-created session.
+  
+  Optional parameters
+    `session` The ID of the session to be cloned; if not provided, 
+              a new session with default bindings is created, 
+              and mapped to the returned session ID."
   ([client callback]
     (.clone client callback))
   
   ([client session callback]
     (.clone client session callback)))
 
-(defn close [client session callback]
+(defn close 
+  "Closes the specified session.
+  
+  Required parameters
+  `session` The ID of the session to be closed."
+  [client session callback]
   (.close client session callback))
