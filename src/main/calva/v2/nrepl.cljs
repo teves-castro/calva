@@ -53,7 +53,14 @@
   (.close client session callback))
 
 
-(defn disconnect [{:keys [socket clj-session cljs-session]}]
+(defn disconnect 
+  "`disconnect` is not part of the nREPL API, but it's a handy
+  function we can use to close the Clojure and ClojureScript
+  sessions and then disconnect.
+
+  *It's fine to call this function without a
+  Clojure or ClojureScript session."
+  [{:keys [socket clj-session cljs-session]}]
   ;; TODO
   ;; Close sessions before disconnecting
   ;; 1. Close ClojureScript session if there is one
