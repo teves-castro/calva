@@ -34,7 +34,8 @@
 (deftype ClojureDocumentRangeFormattingEditProvider []
   Object
   (provideDocumentRangeFormattingEdits [_ document range options token]
-    (let [pretty (cljfmt/reformat-string (.getText document range) {:remove-consecutive-blank-lines? false})
+    (let [text (.getText document range)
+          pretty (cljfmt/reformat-string text {:remove-consecutive-blank-lines? false})
           edit (vscode/TextEdit.replace range pretty)]
       #js [edit])))
 
