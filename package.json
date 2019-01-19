@@ -363,6 +363,7 @@
         "vscode-extension-telemetry": "0.0.15"
     },
     "devDependencies": {
+        "ajv": "^5.5.2",
         "concurrently": "^4.1.0",
         "eslint": "^4.19.1",
         "eslint-config-standard": "^11.0.0",
@@ -370,8 +371,11 @@
         "eslint-plugin-node": "^6.0.1",
         "eslint-plugin-promise": "^3.7.0",
         "eslint-plugin-standard": "^3.0.1",
+        "google-closure-compiler": "^20181209.0.0-webpack-beta",
         "ts-loader": "^5.3.3",
         "typescript": "^2.9.2",
-        "vscode": "^1.1.26"
+        "vscode": "^1.1.26",
+        "webpack": "^4.28.4",
+        "webpack-cli": "^3.2.1"
     }
 }
