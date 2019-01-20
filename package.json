@@ -365,6 +365,7 @@
     "devDependencies": {
         "ajv": "^5.5.2",
         "concurrently": "^4.1.0",
+        "css-loader": "^2.1.0",
         "eslint": "^4.19.1",
         "eslint-config-standard": "^11.0.0",
         "eslint-plugin-import": "^2.12.0",
@@ -372,6 +373,9 @@
         "eslint-plugin-promise": "^3.7.0",
         "eslint-plugin-standard": "^3.0.1",
         "google-closure-compiler": "^20181209.0.0-webpack-beta",
+        "node-sass": "^4.11.0",
+        "sass-loader": "^7.1.0",
+        "style-loader": "^0.23.1",
         "ts-loader": "^5.3.3",
         "typescript": "^2.9.2",
         "vscode": "^1.1.26",
