@@ -363,6 +363,7 @@
         "vscode-extension-telemetry": "0.0.15"
     },
     "devDependencies": {
+        "acorn": "^6.0.5",
         "ajv": "^5.5.2",
         "concurrently": "^4.1.0",
         "css-loader": "^2.1.0",
